@@ -20,9 +20,6 @@ class LocalStorage {
   /// A future indicating if localstorage instance is ready for read/write operations
   Future<bool> ready;
 
-  /// Prevents the file from being accessed more than once
-  Future<void> _lock;
-
   /// [key] is used as a filename
   /// Optional [path] is used as a directory. Defaults to application document directory
   factory LocalStorage(String key,
@@ -75,34 +72,30 @@ class LocalStorage {
     value, [
     Object toEncodable(Object nonEncodable),
   ]) async {
-    final _encoded =
-        json.encode(toEncodable != null ? toEncodable(value) : value);
-    await _dir.setItem(key, json.decode(_encoded));
+    var data = toEncodable != null ? toEncodable(value) : null;
+    if (data == null) {
+      try {
+        data = value.toJson();
+      } on NoSuchMethodError catch (_) {
+        data = value;
+      }
+    }
 
-    return _attemptFlush();
+    await _dir.setItem(key, data);
+
+    return _flush();
   }
 
   /// Removes item from storage by key
   Future<void> deleteItem(String key) async {
     await _dir.remove(key);
-    return _attemptFlush();
+    return _flush();
   }
 
   /// Removes all items from localstorage
   Future<void> clear() async {
     await _dir.clear();
-    return _attemptFlush();
-  }
-
-  Future<void> _attemptFlush() async {
-    if (_lock != null) {
-      await _lock;
-    }
-
-    // Lock will complete when file has been written
-    _lock = _flush();
-
-    return _lock;
+    return _flush();
   }
 
   Future<void> _flush() async {
