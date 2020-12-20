@@ -43,10 +43,12 @@ class DirUtils implements LocalStorageImpl {
   @override
   Future<void> flush([dynamic data]) async {
     final serialized = json.encode(data ?? _data);
+    final buffer = utf8.encode(serialized);
+
     _file = await _file.lock();
     _file = await _file.setPosition(0);
-    _file = await _file.writeString(serialized);
-    _file = await _file.truncate(serialized.length);
+    _file = await _file.writeFrom(buffer);
+    _file = await _file.truncate(buffer.length);
   }
 
   @override
@@ -100,11 +102,12 @@ class DirUtils implements LocalStorageImpl {
 
     if (await file.exists()) {
       _file = await file.open(mode: FileMode.append);
-      return _file;
     } else {
       await file.create();
-      return await file.open(mode: FileMode.append);
+      _file = await file.open(mode: FileMode.append);
     }
+
+    return _file;
   }
 
   Future<Directory> _getDocumentDir() async {

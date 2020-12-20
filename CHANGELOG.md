@@ -1,3 +1,11 @@
+## 3.0.6+9
+
+- fix wrong truncate size (use utf8.encode)
+
+## 3.0.5+8
+
+- fix an issue with initial storage creation
+
 ## 3.0.4+7
 
 - fix [#43 Error on init - Unexpected end of input (at character 1) ^](https://github.com/lesnitsky/flutter_localstorage/issues/43)
